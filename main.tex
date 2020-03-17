@@ -1,0 +1,599 @@
+\documentclass{beamer}
+\usetheme[secheader]{Boadilla}
+\usepackage{comment}
+% wow this is a hack that lets you have more definitions in latex.
+% see http://www.tex.ac.uk/cgi-bin/texfaq2html?label=noroom
+\usepackage{natbib}
+\usepackage{etex}
+\usepackage{pgffor}
+\usepackage[utf8]{inputenc}
+%\usepackage[cyr]{aeguill}
+\reserveinserts{28}
+\usepackage{tikz}
+\usepackage[customcolors]{hf-tikz}
+%\usepackage[utf8]{inputenc}
+%\mode<presentation>{\usetheme{Caltech}}
+
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{multimedia}
+\usepackage{color}
+\usepackage{esint}
+\usepackage{stmaryrd}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage[squaren]{SIunits}
+\usepackage{graphicx}
+\usepackage{diagbox}
+\usepackage{pdfpages}
+\usepackage{dsfont}
+\usepackage{xcolor}
+\usepackage{soul}
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+
+\usepackage{subfig}
+
+\graphicspath{{./img/}}
+
+\newcommand{\cplus}{\colorbox{green}{($+$)} }
+\newcommand{\cmoins}{\colorbox{red}{($-$)} }
+\newcommand{\cmean}{\colorbox{yellow}{($\pm$)}}
+
+\newcommand{\mathcolorbox}[2]{\colorbox{#1}{$\displaystyle #2$}}
+
+\input{mathdef.tex}
+%\input{../glossary.tex}
+\input{symbol.tex}
+
+\setbeamertemplate{footline}{%
+    \hfill%
+    \usebeamercolor[fg]{page number in head/foot}%
+    \usebeamerfont{page number in head/foot}%
+    \insertframenumber%
+%\,/\,\inserttotalframenumber
+    \kern1em\vskip2pt%
+}
+
+\beamertemplatenavigationsymbolsempty
+
+\author[shortname]{
+    Nicolas Carrara \inst{3} \and
+    Edouard Leurent\inst{3,5} \and
+    Tanguy Urvoy \inst{1} \and
+    Romain Laroche \inst{2} \and
+    Odalric-Ambrym Maillard \inst{3} \and
+    Olivier Pietquin \inst{3,4}}
+\institute[shortinst]{\inst{1} Orange Labs\and %
+    \inst{2} Microsoft Montr\'eal. \and
+    \inst{3} Univ. Lille, CNRS, Centrale Lille, INRIA UMR 9189 - CRIStAL\and
+    \inst{4} Google Research, Brain Team, Paris\and
+    \inst{5} Renault}
+
+\title[]{Budgeted Reinforcement Learning in Continuous State Space (NeurIPS 2019)}
+\date{Last update: August the 11th, 2019.}
+\begin{document}
+    \begin{frame}
+        \maketitle
+        \centering
+    \end{frame}
+
+
+    \foreach \n in {0,1}{
+        \begin{frame}{The Transfer Learning problem}
+            \begin{figure}
+                \centering
+                %%\vspace{-1.5em}
+                \includegraphics[scale=0.75,page=1]{tl\n.pdf}
+            \end{figure}
+        \end{frame}
+    }
+
+    \begin{frame}{Why we transfer?}
+
+        \begin{figure}
+            \begin{center}
+                \subfloat[Jumpstart]{
+                    \includegraphics[width=0.3\textwidth]{objectives-jumpstart}
+                    \label{fig:objectives-jumpstart}
+                }
+                \subfloat[Learning]{
+                    \includegraphics[width=0.3\textwidth]{objectives-learn}
+                    \label{fig:objectives-learn}
+                }
+                \subfloat[Asymptotical]{
+                    \includegraphics[width=0.3\textwidth]{objectives-asymptote}
+                    \label{fig:objectives-asymptote}
+                }
+                \caption{Transfer learning objectives ~(Langley 2016)}
+                \label{fig:objectives}
+            \end{center}
+        \end{figure}
+
+    \end{frame}
+
+    \begin{frame}{The settings}
+
+        Two main setting:
+
+        \begin{itemize}
+            \item Domain $S\times A$ is not fixed. Find a mapping between a source and a target task.
+            \item Domain is fixed:
+            \begin{itemize}
+                \item mono-task (one to one),
+                \item generic-task (one to many),
+                \item multi-task  (many to many).
+            \end{itemize}
+        \end{itemize}
+
+    \end{frame}
+
+    \begin{frame}{The knowledge transfered}
+
+        Several types of knowledge:
+        \begin{itemize}
+            \item transitions ( ${(s_i,a_i,r'_i,s'_i)}_{i\in[0,N]}$ for example),
+            \item representation (features, action space, options, reward shaping etc),
+            \item parameters (meta parameters, Q-function, policy etc).
+        \end{itemize}
+
+    \end{frame}
+
+    \begin{frame}{Negative Transfer}
+
+        \begin{itemize}
+            \item Transfer learning isn’t guaranteed to help
+            \item Negative transfer occurs when performance is worse than learning
+            target task from scratch (usually happen at the asymptote)
+        \end{itemize}
+
+    \end{frame}
+
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+    \begin{frame}
+        Adaptation workflow [Carrara et al. 2017, Sigdial]
+    \end{frame}
+
+
+    \foreach \n in {1,2,3,4,5,6,7,8,9,10,11,12}{
+        \begin{frame}{\textbf{Adaptation} | processus}
+            \begin{figure}
+                \begin{center}
+                    \includegraphics[width=0.75\textwidth]{dataflowRobot\n.pdf}
+                \end{center}
+            \end{figure}
+        \end{frame}
+    }
+
+
+    \begin{frame}{\textbf{Sources election} | \textsc{PD-distance}}
+        \begin{figure}
+            \begin{center}
+                \includegraphics[width=0.8\textwidth]{pddistance0.pdf}
+            \end{center}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}{\textbf{Sources election} | \textsc{PD-distance}}
+        \begin{figure}
+            \begin{center}
+                \includegraphics[width=0.8\textwidth]{pddistance.pdf}
+            \end{center}
+        \end{figure}
+    \end{frame}
+    \foreach \n in {0,1,2,3,4}{
+        \begin{frame}{\textbf{Sources election} | \textsc{PD-distance} and euclidian norm}
+            \begin{figure}
+                \begin{center}
+                    \includegraphics[width=0.8\textwidth]{euclide\n.pdf}
+                \end{center}
+            \end{figure}
+        \end{frame}
+    }
+
+    \begin{frame}{\textbf{Sources election} | \textsc{K-means}}
+        \begin{figure}
+            \begin{center}
+                \includegraphics[width=0.8\textwidth]{clustering.pdf}
+            \end{center}
+        \end{figure}
+    \end{frame}
+
+    \foreach \n in {0}{
+        \begin{frame}{\textbf{Sources election} | \textsc{K-means}}
+            \begin{figure}
+                \begin{center}
+                    \includegraphics[width=0.8\textwidth]{kmeans\n.pdf}
+                \end{center}
+            \end{figure}
+        \end{frame}
+    }
+    \begin{frame}{\textbf{Sources election} | \textsc{K-medoids}}
+        \begin{figure}
+            \begin{center}
+                \includegraphics[width=0.8\textwidth]{clustering.pdf}
+            \end{center}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}{\textbf{Sources election} | \textsc{K-medoids}}
+        \begin{figure}
+            \begin{center}
+                \includegraphics[width=0.8\textwidth]{kmedoids.pdf}
+            \end{center}
+        \end{figure}
+    \end{frame}
+
+
+
+    \foreach \n in {8}{
+        \begin{frame}{\textbf{Source selection} | Bandit: UCB1}
+            \begin{figure}
+                \begin{center}
+                    \includegraphics[width=0.65\textwidth]{bd\n.pdf}
+                \end{center}
+            \end{figure}
+        \end{frame}
+    }
+
+
+    \foreach \n in {0,1,2,3,4,5,6}{
+        \begin{frame}{\textbf{Transfer and Learning}}
+            \begin{figure}
+                \begin{center}
+                    \includegraphics[width=1.0\textwidth]{tftq\n.pdf}
+                \end{center}
+            \end{figure}
+        \end{frame}
+    }
+
+
+    \begin{frame}{\textbf{Adaptation experiments} | simulated users}
+        \begin{figure}
+            \captionsetup[subfigure]{labelformat=empty}
+            \begin{center}
+                \subfloat[Overall score ]{
+                    \includegraphics[width=0.5\textwidth]{img/handcraftedScores.pdf}
+                }
+                \subfloat[Dialogue size]{
+                    \includegraphics[width=0.5\textwidth]{img/handcraftedDialoguesize.pdf}
+                }
+            \end{center}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}{\textbf{Adaptation experiments} | human-model users}
+        \begin{figure}
+            \captionsetup[subfigure]{labelformat=empty}
+            \begin{center}
+                \subfloat[Overall score ]{
+                    \includegraphics[width=0.5\textwidth]{img/humanScores.pdf}
+                }
+                \subfloat[Dialogue size]{
+                    \includegraphics[width=0.5\textwidth]{img/humanDialoguesize.pdf}
+                }
+            \end{center}
+        \end{figure}
+    \end{frame}
+
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+    \section{Safe Reinforcement Learning}
+
+    \begin{frame}
+        Budgeted Reinforcement Learning [Carrara et al. 2019, NeurIPS]
+    \end{frame}
+
+    \begin{frame}
+
+        \begin{alertblock}{Limitation}
+            New tasks $\rightarrow$ requiere caution sometimes.
+        \end{alertblock}
+
+
+        \begin{exampleblock}{Solution}
+            \begin{itemize}
+                \item Learning the policy for the target task,
+                \item using a safe policy.
+                \begin{itemize}
+                    \item Budget $\beta$ is the average amount of risk allowed.
+                \end{itemize}
+            \end{itemize}
+        \end{exampleblock}
+
+        \begin{block}{}
+            How to learn this conservative policy ?
+        \end{block}
+
+    \end{frame}
+
+    \subsection{Mastering the risk in RL}
+
+    \begin{frame}
+
+        \begin{block}{Constraint}
+            $C:S\times A \rightarrow \{0,1\}$.
+        \end{block}
+
+        \begin{block}{Lagragian relaxation}
+            $R \leftarrow R - \lambda C$.
+        \end{block}
+
+
+        \begin{alertblock}{Limitation}
+            What $\lambda$ for what budget $\beta$?
+        \end{alertblock}
+
+        \begin{exampleblock}{Solution: $\lambda$ calibration}% oral: limitation des politiques lagragiennes
+            Searching the safe policy on the Pareto front.
+        \end{exampleblock}
+
+
+    \end{frame}
+
+    \foreach \n in {0,1}{
+        \begin{frame}{}
+            \begin{figure}
+                \begin{center}
+                    \includegraphics[width=1\textwidth]{pareto\n.pdf}
+                \end{center}
+            \end{figure}
+        \end{frame}
+    }
+
+    \begin{frame}
+        \begin{alertblock}{Limitations}
+            \begin{itemize}
+                \item \cmoins Cumbersome and not reliable processus  % où commencer, quel steps ?
+                \item \cmoins It is possible that not $\lambda$ exists for $\beta$.
+                \item \cmoins Deterministics policies $\rightarrow$ extreme behaviours.
+                % pas de formulation linéaire de la reward pour un budget donné
+            \end{itemize}
+        \end{alertblock}
+        \begin{exampleblock}{Solution}
+            Budgeted Reinforcement Learning.
+            % Ce qui nous amène à la prochaine contribution: BRL
+        \end{exampleblock}
+    \end{frame}
+
+
+    \begin{frame}{Framework}
+        \begin{block}{Markov Decision Processes (MDP)}
+            \begin{itemize}
+                \item $(\cS, \cA, P, R, \gamma)$
+                \item $G_r^\pi = \sum_{t=0}^\infty \gamma^t R(s_t, a_t)$ return of rewards.
+                \item Trouver $\pi^*$ t.q $\forall s\in\cS$:
+                \begin{equation}
+                    \label{eq:mdp}
+                    \begin{array}{lcr}
+                        \displaystyle \pi^* \in \argmax_{\pi\in\cM(\cA)^\cS} \expectedvalue[G_r^\pi | s_0=s]
+                    \end{array}
+                \end{equation}
+
+            \end{itemize}
+        \end{block}
+
+
+        \begin{block}{}
+            \begin{itemize}
+                \item \cplus \textit{Tractable}
+                \item \cmoins Extreme behaviours
+                \item \cmoins Need calibration (which $\lambda$ for $\beta$?)
+                % A l ORAL si formulation sous contrainte
+            \end{itemize}
+        \end{block}
+
+    \end{frame}
+
+    \begin{frame}{Framework}
+
+        \begin{block}{\textcolor{purple}{Constrained} Markov Decision Processes (CMDP)}
+            \begin{itemize}
+                \item $(\cS, \cA, P, R,\textcolor{purple}{C}, \gamma,\textcolor{purple}{\beta})$
+                \item $G_r^\pi = \sum_{t=0}^\infty \gamma^t R(s_t, a_t)$ return of rewards.
+                \item \textcolor{purple}{ $G_c^\pi = \sum_{t=0}^\infty \gamma^t C(s_t, a_t)$ return of costs.}
+                \item Trouver $\pi^*$ t.q $\forall s\in\cS$:
+                \begin{equation}
+                    \label{eq:cmdp}
+                    \begin{array}{lcr}
+                        \displaystyle \pi^* \in \argmax_{\pi\in\cM(\cA)^\cS} \expectedvalue[G_r^\pi | s_0=s] \\
+                        \text{ s.t. }  \textcolor{purple}{\expectedvalue[G_c^\pi | s_0=s] \leq \beta}
+                    \end{array}
+                \end{equation}
+            \end{itemize}
+        \end{block}
+
+        \begin{block}{}
+            \begin{itemize}
+                \item \cplus \textit{Tractable}
+                \item \cmean +1 DOF (if policies mixtures) % A L ORAL On peut définir un budget de safety , formuation plus naturelle
+                \item \cmoins fixed budged
+                % A L ORAL si le budget change on the fly, ou qu'il n'est pas adapté, on doit reapprendre une politique,  Or Le front de pareto est rarement linéaire, le choix du budget n'est pas évident
+
+
+            \end{itemize}
+        \end{block}
+
+    \end{frame}
+
+    \begin{frame}{Framework}
+
+        \begin{block}{\textcolor{purple}{Budgeted} Markov Decision Process (BMDP)}
+            \begin{itemize}
+                \item $(\cS, \cA, P, R,{C}, \gamma,\textcolor{purple}{\cB})$
+                \item $G_r^\pi = \sum_{t=0}^\infty \gamma^t R(s_t, a_t)$ return of rewards.
+                \item  $G_c^\pi = \sum_{t=0}^\infty \gamma^t C(s_t, a_t)$ return of costs.
+                \item Find $\pi^*$ s.t $\forall (s,\textcolor{purple}{\beta})\in\cS\times\textcolor{purple}{\cB}$:
+                \begin{equation}
+                    \label{eq:bmdp}
+                    \begin{array}{lcr}
+                        \displaystyle \pi^* \in \argmax_{\pi\in\cM(\cA\times\textcolor{purple}{\cB})^{\cS\times\textcolor{purple}{\cB}}} \expectedvalue[G_r^\pi | s_0=s,\textcolor{purple}{\beta_0=\beta}] \\
+                        \text{ s.t. }  \expectedvalue[G_c^\pi | s_0=s,\textcolor{purple}{\beta_0=\beta}] \leq \beta
+                    \end{array}
+                \end{equation}
+            \end{itemize}
+        \end{block}
+
+
+        \begin{block}{}
+            \begin{itemize}
+                \item \cmoins \textit{Untractable}
+                \item \cplus +1 DOF
+                \item \cplus unfixed budget
+
+                % A L ORAL On peut définir un budget de safety et d'afranchir des lambda.}
+            \end{itemize}
+        \end{block}
+
+    \end{frame}
+
+
+    \begin{frame}{Augmented settings}
+
+        \textbf{Budgeted Policies} $\pi\in\Pi$
+        \begin{itemize}
+            \item $ \pi:\underbrace{(s,\beta)}_{\os} \rightarrow \underbrace{(a,\beta')}_{\oa}$
+        \end{itemize}
+
+        \textbf{Domain}
+        \begin{itemize}
+            \item State $\ocS = \cS\times\cB$.
+            \item Actions $\ocA = \cA\times\cB$.
+            \item Dynamic $\ov{P}$
+            %$\left((s',\beta') \condbar (s,\beta), (a, \beta_a)\right) \eqdef P(s'|s, a)\delta(\beta' - \beta_a)$.
+        \end{itemize}
+        \textbf{2D signals}
+        \begin{itemize}
+            \item Rewards $\ov{R} = (R, C)$
+            \item Returns $G^\pi = (G_r^\pi, G_c^\pi)$
+            \item $V^\pi(\os) = (V_r^\pi, V_c^\pi) \eqdef \expectedvalue\left[ G^\pi \condbar \ov{s_0} = \os\right]$
+            \item $Q^\pi(\os, \oa)= (Q_r^\pi, Q_c^\pi) \eqdef \expectedvalue\left[ G^\pi \condbar \ov{s_0} = \os, \ov{a_0} = \oa\right]$
+        \end{itemize}
+
+    \end{frame}
+
+    \begin{frame}{Optimality}
+        \begin{definition}
+            \begin{enumerate}
+                \item[(i)] \pause\colorbox{red}{Respect the budget $\beta$}:
+                \begin{equation*}
+                    \Pi_a(\os) \eqdef \{\pi\in\Pi: V_c^\pi(s, \beta) \mathcolorbox{red}{\leq \beta}\}
+                \end{equation*}
+                \item[(ii)] \pause\colorbox{green}{Maximise rewards}:
+                \begin{equation*}
+                    V_r^*(\os) \eqdef \mathcolorbox{green}{\max}_{\pi\in\Pi_a(\os)}  V_r^\pi(\os) \qquad\quad \Pi_r(\os) \eqdef \mathcolorbox{green}{\argmax}_{\pi\in\Pi_a(\os)}  V_r^\pi(\os)
+                \end{equation*}
+                \item[(iii)] \pause\colorbox{yellow}{Minimise costs}:
+                \begin{equation*}
+                    V_c^*(\os) \eqdef \mathcolorbox{yellow}{\min}_{\pi\in\Pi_r(\os)}  V_c^\pi(\os), \qquad\quad \Pi^*(\os) \eqdef \mathcolorbox{yellow}{\argmin}_{\pi\in\Pi_r(\os)}  V_c^\pi(\os)
+                \end{equation*}
+            \end{enumerate}
+
+            \pause We define $Q^*$ in the same fashion.
+        \end{definition}
+    \end{frame}
+
+    \begin{frame}{Bellman optimality equation}
+        \begin{block}{Bellman optimality equation}
+            $Q^*$ verifies:
+            \begin{align*}
+                Q^{*}(\os, \oa) &= \cT Q^{*}(\os, \oa)\\
+                &\eqdef \ov{R}(\os, \oa) + \gamma \sum_{\os'\in\ocS} \ov{P}(\ov{s'} | \os, \oa)\sum_{\ov{a'}\in \ocA} \pi_\text{greedy}(\ov{a'}|\ov{s'}; Q^*) Q^{*}(\ov{s'}, \ov{a'}),
+            \end{align*}
+            with:\pause
+            \begin{align*}
+                \pi_\text{greedy}(\cdot|\os; Q) \in &\mathcolorbox{yellow}{\argmin}_{\rho\in\Pi_r^Q} \sum_{\oa}\rho(\oa) Q_c(\os, \oa), \\
+                \text{where }\quad \Pi_r^Q \eqdef &\mathcolorbox{green}{\argmax}_{\rho\in\cM(\ocA)} \sum_{\oa}\rho(\oa) Q_r(\os, \oa) \\
+                & \text{ s.t. }   \sum_{\oa}\rho(\oa) Q_c(\os, \oa) \mathcolorbox{red}{\leq \beta}
+            \end{align*}
+        \end{block}
+        % ORAL: comment résoudre ce problème ?
+    \end{frame}
+
+
+    \foreach \n in {0,1,2,3,4}{
+        \begin{frame}{Solving the non linear program}
+            \begin{figure}
+                \centering
+                %%\vspace{-1.5em}
+                \includegraphics[scale=1.0,page=1]{img/b\n}
+            \end{figure}
+        \end{frame}
+    }
+
+    \begin{frame}{Asymptotical behaviour}
+
+
+        \begin{alertblock}{ \cmoins $\cT$ is not a contraction:}
+            $\forall\epsilon>0, \exists Q^1,Q^2\in(\Real^2)^{\ocS\ocA}:\|\cT Q^1-\cT Q^2\|_\infty \geq \frac{1}{\epsilon}\|Q^1-Q^2\|_\infty$
+        \end{alertblock}
+
+        \begin{exampleblock}{\cplus unless $Q$-fonctions are smooth:}
+            $\cT$ is a contraction for the subset $\cL_\gamma$ of $Q$-functions such that "$Q_r$ is $L$-Lipschitz w.r.t $Q_c$", with $L<\frac{1}{\gamma}-1$
+
+        \end{exampleblock}
+    \end{frame}
+
+    \begin{frame}
+
+        \begin{block}{Budgeted Value-Iteration}
+            \begin{itemize}
+                \item $Q \leftarrow \mathbf{0}$
+                \item $Q(\os,\oa) \leftarrow \bo Q(\os,\oa)\ \forall (\os,\oa)$ jusqu'à convergence % peut ne pas arriver
+                \item Return $\pi(\os) = \pi_\text{greedy}(\cdot|\os; Q)$
+            \end{itemize}
+        \end{block}
+        \pause
+        \begin{alertblock}{}
+            \begin{itemize}
+                \item How to compute $\bo Q$ if $\transition$, $\reward$ et $\constraint$ are unknown?
+                \begin{itemize}
+                    \item Sampling with $\mathcal{D}=\{(\os_i,\oa_i,\ov{r}_i',\os_i')\}_{i\in[0,N]}$
+                \end{itemize}
+                \item How to compute $Q\ \forall (\os,\oa) \in \ocS\times\ocA$ if $\ocS$ is large or continuous ?
+                \begin{itemize}
+                    \item Function approximation
+                \end{itemize}
+            \end{itemize}
+
+        \end{alertblock}
+        \pause
+        \begin{block}{Budgeted Fitted-Q}
+            \begin{itemize}
+                \item $Q \leftarrow \mathbf{0}$
+                \item $Q \leftarrow \Gamma(\{\os_{\indextransition},\oa_{\indextransition}\}_{{\indextransition}\in \T},\{\ov{r}'_{\indextransition} + \gamma \sum_{\ov{a}'\in \cA} \pi_\text{greedy}(\ov{a}'|\ov{s}'_{\indextransition}; Q) Q(\ov{s}'_{\indextransition}, \ov{a}')_{{\indextransition} \in \T}\})$
+                \item Return $\pi(\os) = \pi_\text{greedy}(\cdot|\os; Q)$
+            \end{itemize}
+        \end{block}
+    \end{frame}
+
+    \begin{frame}{Experiments: dialogue systems}
+        \begin{center}
+            \includegraphics[scale=0.9]{img/slot-filling.pdf}
+        \end{center}
+    \end{frame}
+
+    \begin{frame}{Experiments: autonomous driving}
+        \begin{center}
+            \includegraphics[scale=0.9]{img/highway.pdf}
+        \end{center}
+    \end{frame}
+
+
+\end{document}
+

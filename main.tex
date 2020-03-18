@@ -1,5 +1,24 @@
 \documentclass{beamer}
 \usetheme[secheader]{Boadilla}
+
+\defbeamertemplate*{footline}{Boadilla}
+{
+   \leavevmode%
+   \hbox{%
+%   \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,right]{author in head/foot}%
+%     \usebeamerfont{author in head/foot}\insertshortauthor~~(\insertshortinstitute)
+%   \end{beamercolorbox}%
+%   \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,right]{title in head/foot}%
+%     \usebeamerfont{title in head/foot}\insertshorttitle
+%   \end{beamercolorbox}%
+   \begin{beamercolorbox}[wd=1\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
+%     \usebeamerfont{date in head/foot}\insertshortdate{}\hspace*{2em}
+     \insertframenumber{}\hspace*{2ex}
+   \end{beamercolorbox}}%
+   \vskip0pt%
+}
+
+
 \usepackage{comment}
 % wow this is a hack that lets you have more definitions in latex.
 % see http://www.tex.ac.uk/cgi-bin/texfaq2html?label=noroom
@@ -48,32 +67,14 @@
 %\input{../glossary.tex}
 \input{symbol.tex}
 
-\setbeamertemplate{footline}{%
-    \hfill%
-    \usebeamercolor[fg]{page number in head/foot}%
-    \usebeamerfont{page number in head/foot}%
-    \insertframenumber%
-%\,/\,\inserttotalframenumber
-    \kern1em\vskip2pt%
-}
-
 \beamertemplatenavigationsymbolsempty
 
 \author[shortname]{
-    Nicolas Carrara \inst{3} \and
-    Edouard Leurent\inst{3,5} \and
-    Tanguy Urvoy \inst{1} \and
-    Romain Laroche \inst{2} \and
-    Odalric-Ambrym Maillard \inst{3} \and
-    Olivier Pietquin \inst{3,4}}
-\institute[shortinst]{\inst{1} Orange Labs\and %
-    \inst{2} Microsoft Montr\'eal. \and
-    \inst{3} Univ. Lille, CNRS, Centrale Lille, INRIA UMR 9189 - CRIStAL\and
-    \inst{4} Google Research, Brain Team, Paris\and
-    \inst{5} Renault}
+    Nicolas Carrara  }
+\institute[shortinst]{University of Toronto}
 
-\title[]{Budgeted Reinforcement Learning in Continuous State Space (NeurIPS 2019)}
-\date{Last update: August the 11th, 2019.}
+\title[]{Transfer learning in Reinforcement Learning.}
+\date{March 19, 2020}
 \begin{document}
     \begin{frame}
         \maketitle
@@ -81,8 +82,50 @@
     \end{frame}
 
 
-    \foreach \n in {0,1}{
-        \begin{frame}{The Transfer Learning problem}
+    \section{Transfer Learning}
+
+    \subsection{Markov Decision Process limitations}
+
+    \begin{frame}
+        \begin{block}{Markov Decision Processes (MDP)}
+
+            A tuple $(\cS, \cA, P, R, \gamma)$ where
+
+            \begin{itemize}
+                \item $\cS$ is the state space; $\cA$ is the action space.
+                \item $P$ the transition function (or dynamic); $R$ the reward function.
+                \item $\gamma$ the discounted factor.
+            \end{itemize}
+        \end{block}
+
+        \pause
+        \begin{block}{Solving an MDP}
+            \begin{itemize}
+                \item $G_r^\pi = \sum_{t=0}^\infty \gamma^t R(s_t, a_t)$ return of rewards.
+                \item Find $\pi^*$ s.t $\forall s\in\cS$: $\pi^* \in \argmax_{\pi\in\cM(\cA)^\cS} \expectedvalue[G_r^\pi | s_0=s]$
+%                \begin{equation}
+%                    \label{eq:mdp}
+%                    \begin{array}{lcr}
+%                        \displaystyle \pi^* \in \argmax_{\pi\in\cM(\cA)^\cS} \expectedvalue[G_r^\pi | s_0=s]
+%                    \end{array}
+%                \end{equation}
+
+            \end{itemize}
+        \end{block}
+        \pause
+        \begin{block}{Limitations}
+            \begin{itemize}
+                \item  $\cS$ (or $\cA$) is large of continuous ? $\rightarrow$ Function approximation (FA).
+                \item  $P$ or $R$ are unknown ? $\rightarrow$ Reinforcement Learning (RL).
+                \item Too few data, learning from scratch ? $\rightarrow$ Transfer Learning (TL).
+            \end{itemize}
+        \end{block}
+    \end{frame}
+
+    \subsection{The problem}
+
+    \foreach \n in {1}{
+        \begin{frame}{}
             \begin{figure}
                 \centering
                 %%\vspace{-1.5em}
@@ -119,7 +162,7 @@
         Two main setting:
 
         \begin{itemize}
-            \item Domain $S\times A$ is not fixed. Find a mapping between a source and a target task.
+            \item Domain $\cS\times \cA$ is not fixed. Find a mapping between a source and a target task.
             \item Domain is fixed:
             \begin{itemize}
                 \item mono-task (one to one),
@@ -160,13 +203,16 @@
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
+    \section{Scaling TL}
+
     \begin{frame}
-        Adaptation workflow [Carrara et al. 2017, Sigdial]
+        Online learning and transfer for user adaptation in dialogue systems [Carrara et al. 2017, Sigdial]
     \end{frame}
 
+    \subsection{Workflow}
 
     \foreach \n in {1,2,3,4,5,6,7,8,9,10,11,12}{
-        \begin{frame}{\textbf{Adaptation} | processus}
+        \begin{frame}{Workflow}
             \begin{figure}
                 \begin{center}
                     \includegraphics[width=0.75\textwidth]{dataflowRobot\n.pdf}
@@ -176,7 +222,7 @@
     }
 
 
-    \begin{frame}{\textbf{Sources election} | \textsc{PD-distance}}
+    \begin{frame}{Sources election | \textsc{PD-distance}}
         \begin{figure}
             \begin{center}
                 \includegraphics[width=0.8\textwidth]{pddistance0.pdf}
@@ -184,7 +230,7 @@
         \end{figure}
     \end{frame}
 
-    \begin{frame}{\textbf{Sources election} | \textsc{PD-distance}}
+    \begin{frame}{Sources election | \textsc{PD-distance}}
         \begin{figure}
             \begin{center}
                 \includegraphics[width=0.8\textwidth]{pddistance.pdf}
@@ -192,7 +238,7 @@
         \end{figure}
     \end{frame}
     \foreach \n in {0,1,2,3,4}{
-        \begin{frame}{\textbf{Sources election} | \textsc{PD-distance} and euclidian norm}
+        \begin{frame}{Sources election | \textsc{PD-distance}}
             \begin{figure}
                 \begin{center}
                     \includegraphics[width=0.8\textwidth]{euclide\n.pdf}
@@ -201,7 +247,7 @@
         \end{frame}
     }
 
-    \begin{frame}{\textbf{Sources election} | \textsc{K-means}}
+    \begin{frame}{Sources election | \textsc{K-means}}
         \begin{figure}
             \begin{center}
                 \includegraphics[width=0.8\textwidth]{clustering.pdf}
@@ -210,7 +256,7 @@
     \end{frame}
 
     \foreach \n in {0}{
-        \begin{frame}{\textbf{Sources election} | \textsc{K-means}}
+        \begin{frame}{Sources election |\textsc{K-means}}
             \begin{figure}
                 \begin{center}
                     \includegraphics[width=0.8\textwidth]{kmeans\n.pdf}
@@ -218,7 +264,7 @@
             \end{figure}
         \end{frame}
     }
-    \begin{frame}{\textbf{Sources election} | \textsc{K-medoids}}
+    \begin{frame}{Sources election | \textsc{K-medoids}}
         \begin{figure}
             \begin{center}
                 \includegraphics[width=0.8\textwidth]{clustering.pdf}
@@ -226,7 +272,7 @@
         \end{figure}
     \end{frame}
 
-    \begin{frame}{\textbf{Sources election} | \textsc{K-medoids}}
+    \begin{frame}{Sources election | \textsc{K-medoids}}
         \begin{figure}
             \begin{center}
                 \includegraphics[width=0.8\textwidth]{kmedoids.pdf}
@@ -234,10 +280,8 @@
         \end{figure}
     \end{frame}
 
-
-
     \foreach \n in {8}{
-        \begin{frame}{\textbf{Source selection} | Bandit: UCB1}
+        \begin{frame}{Source selection | UCB1}
             \begin{figure}
                 \begin{center}
                     \includegraphics[width=0.65\textwidth]{bd\n.pdf}
@@ -246,9 +290,8 @@
         \end{frame}
     }
 
-
     \foreach \n in {0,1,2,3,4,5,6}{
-        \begin{frame}{\textbf{Transfer and Learning}}
+        \begin{frame}{Transfer and Learning}
             \begin{figure}
                 \begin{center}
                     \includegraphics[width=1.0\textwidth]{tftq\n.pdf}
@@ -257,8 +300,8 @@
         \end{frame}
     }
 
-
-    \begin{frame}{\textbf{Adaptation experiments} | simulated users}
+    \subsection{Experiments}
+    \begin{frame}{Simulated users}
         \begin{figure}
             \captionsetup[subfigure]{labelformat=empty}
             \begin{center}
@@ -272,7 +315,7 @@
         \end{figure}
     \end{frame}
 
-    \begin{frame}{\textbf{Adaptation experiments} | human-model users}
+    \begin{frame}{Human-model users}
         \begin{figure}
             \captionsetup[subfigure]{labelformat=empty}
             \begin{center}
@@ -293,11 +336,14 @@
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-    \section{Safe Reinforcement Learning}
+    \section{Safe TL}
 
     \begin{frame}
-        Budgeted Reinforcement Learning [Carrara et al. 2019, NeurIPS]
+        Budgeted RL for Continuous State Space
+        [Carrara et al. 2019, NeurIPS]
     \end{frame}
+
+    \subsection{A transfer problem}
 
     \begin{frame}
 
@@ -305,19 +351,19 @@
             New tasks $\rightarrow$ requiere caution sometimes.
         \end{alertblock}
 
-
+        \pause
         \begin{exampleblock}{Solution}
             \begin{itemize}
                 \item Learning the policy for the target task,
                 \item using a safe policy.
                 \begin{itemize}
-                    \item Budget $\beta$ is the average amount of risk allowed.
+                    \item Notion of budget $\beta$: the average amount of risk allowed.
                 \end{itemize}
             \end{itemize}
         \end{exampleblock}
-
+        \pause
         \begin{block}{}
-            How to learn this conservative policy ?
+            How to learn this safe policy ?
         \end{block}
 
     \end{frame}
@@ -329,16 +375,16 @@
         \begin{block}{Constraint}
             $C:S\times A \rightarrow \{0,1\}$.
         \end{block}
-
+        \pause
         \begin{block}{Lagragian relaxation}
             $R \leftarrow R - \lambda C$.
         \end{block}
 
-
+        \pause
         \begin{alertblock}{Limitation}
             What $\lambda$ for what budget $\beta$?
         \end{alertblock}
-
+        \pause
         \begin{exampleblock}{Solution: $\lambda$ calibration}% oral: limitation des politiques lagragiennes
             Searching the safe policy on the Pareto front.
         \end{exampleblock}
@@ -359,25 +405,27 @@
     \begin{frame}
         \begin{alertblock}{Limitations}
             \begin{itemize}
-                \item \cmoins Cumbersome and not reliable processus  % où commencer, quel steps ?
-                \item \cmoins It is possible that not $\lambda$ exists for $\beta$.
+                \item \cmoins Cumbersome and not reliable processus.  % où commencer, quel steps ?
+                \item \cmoins It is possible that no $\lambda$ exists for $\beta$.
                 \item \cmoins Deterministics policies $\rightarrow$ extreme behaviours.
                 % pas de formulation linéaire de la reward pour un budget donné
             \end{itemize}
         \end{alertblock}
+        \pause
         \begin{exampleblock}{Solution}
             Budgeted Reinforcement Learning.
             % Ce qui nous amène à la prochaine contribution: BRL
         \end{exampleblock}
     \end{frame}
 
+    \subsection{MDP}
 
     \begin{frame}{Framework}
         \begin{block}{Markov Decision Processes (MDP)}
             \begin{itemize}
                 \item $(\cS, \cA, P, R, \gamma)$
                 \item $G_r^\pi = \sum_{t=0}^\infty \gamma^t R(s_t, a_t)$ return of rewards.
-                \item Trouver $\pi^*$ t.q $\forall s\in\cS$:
+                \item Find $\pi^*$ s.t $\forall s\in\cS$:
                 \begin{equation}
                     \label{eq:mdp}
                     \begin{array}{lcr}
@@ -391,14 +439,16 @@
 
         \begin{block}{}
             \begin{itemize}
-                \item \cplus \textit{Tractable}
-                \item \cmoins Extreme behaviours
-                \item \cmoins Need calibration (which $\lambda$ for $\beta$?)
+                \item \cplus \textit{Tractable}.
+                \item \cmoins Extreme behaviours.
+                \item \cmoins Need calibration (which $\lambda$ for $\beta$?).
                 % A l ORAL si formulation sous contrainte
             \end{itemize}
         \end{block}
 
     \end{frame}
+
+    \subsection{CMDP}
 
     \begin{frame}{Framework}
 
@@ -407,7 +457,7 @@
                 \item $(\cS, \cA, P, R,\textcolor{purple}{C}, \gamma,\textcolor{purple}{\beta})$
                 \item $G_r^\pi = \sum_{t=0}^\infty \gamma^t R(s_t, a_t)$ return of rewards.
                 \item \textcolor{purple}{ $G_c^\pi = \sum_{t=0}^\infty \gamma^t C(s_t, a_t)$ return of costs.}
-                \item Trouver $\pi^*$ t.q $\forall s\in\cS$:
+                \item Find $\pi^*$ s.t $\forall s\in\cS$:
                 \begin{equation}
                     \label{eq:cmdp}
                     \begin{array}{lcr}
@@ -420,9 +470,9 @@
 
         \begin{block}{}
             \begin{itemize}
-                \item \cplus \textit{Tractable}
-                \item \cmean +1 DOF (if policies mixtures) % A L ORAL On peut définir un budget de safety , formuation plus naturelle
-                \item \cmoins fixed budged
+                \item \cplus \textit{Tractable}.
+                \item \cmean add a DOF (if policies mixtures).% A L ORAL On peut définir un budget de safety , formuation plus naturelle
+                \item \cmoins fixed budged.
                 % A L ORAL si le budget change on the fly, ou qu'il n'est pas adapté, on doit reapprendre une politique,  Or Le front de pareto est rarement linéaire, le choix du budget n'est pas évident
 
 
@@ -430,6 +480,8 @@
         \end{block}
 
     \end{frame}
+
+    \subsection{BMDP}
 
     \begin{frame}{Framework}
 
@@ -452,9 +504,9 @@
 
         \begin{block}{}
             \begin{itemize}
-                \item \cmoins \textit{Untractable}
-                \item \cplus +1 DOF
-                \item \cplus unfixed budget
+                \item \cmoins \textit{Untractable}.
+                \item \cplus add a DOF.
+                \item \cplus unfixed budget.
 
                 % A L ORAL On peut définir un budget de safety et d'afranchir des lambda.}
             \end{itemize}
@@ -508,7 +560,7 @@
         \end{definition}
     \end{frame}
 
-    \begin{frame}{Bellman optimality equation}
+    \begin{frame}{}
         \begin{block}{Bellman optimality equation}
             $Q^*$ verifies:
             \begin{align*}
@@ -582,16 +634,33 @@
         \end{block}
     \end{frame}
 
-    \begin{frame}{Experiments: dialogue systems}
+    \subsection{Experiments}
+
+    \begin{frame}{Dialogue systems}
         \begin{center}
             \includegraphics[scale=0.9]{img/slot-filling.pdf}
         \end{center}
     \end{frame}
 
-    \begin{frame}{Experiments: autonomous driving}
+    \begin{frame}{Autonomous driving}
         \begin{center}
             \includegraphics[scale=0.9]{img/highway.pdf}
         \end{center}
+    \end{frame}
+
+    \begin{frame}{Conclusion}
+        \begin{itemize}
+            \item Online RL is limited, especially if no simulator if available.
+            \begin{itemize}
+                \item Use Transfer Learning: transfer knowledge from source tasks to target tasks.
+            \end{itemize}
+            \item We have seen 2 methods:
+            \begin{itemize}
+                \item a pipeline that can handle a growing database of tasks,
+                \item and a safe transfer learning framework for sensitive tasks.
+            \end{itemize}
+        \end{itemize}
+
     \end{frame}
 
 

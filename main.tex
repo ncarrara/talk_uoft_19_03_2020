@@ -187,7 +187,7 @@
     \begin{frame}{Negative Transfer}
 
         \begin{itemize}
-            \item Transfer learning isn’t guaranteed to help
+            \item Transfer learning will not necessarily help.
             \item Negative transfer occurs when performance is worse than learning
             target task from scratch (usually happen at the asymptote)
         \end{itemize}
@@ -372,7 +372,7 @@
 
     \begin{frame}
 
-        \begin{block}{Constraint}
+        \begin{block}{Cost function}
             $C:S\times A \rightarrow \{0,1\}$.
         \end{block}
         \pause
@@ -440,9 +440,9 @@
         \begin{block}{}
             \begin{itemize}
                 \item \cplus \textit{Tractable}.
-                \item \cmoins Extreme behaviours.
-                \item \cmoins Need calibration (which $\lambda$ for $\beta$?).
+                \item \cmoins No notion of safety. Unless using negative rewards.
                 % A l ORAL si formulation sous contrainte
+                \item \cmoins Extreme behaviours.
             \end{itemize}
         \end{block}
 
@@ -472,7 +472,7 @@
             \begin{itemize}
                 \item \cplus \textit{Tractable}.
                 \item \cmean add a DOF (if policies mixtures).% A L ORAL On peut définir un budget de safety , formuation plus naturelle
-                \item \cmoins fixed budged.
+                \item \cmoins fixed budged. Need calibration (what $\lambda$ for a given $\beta$?).
                 % A L ORAL si le budget change on the fly, ou qu'il n'est pas adapté, on doit reapprendre une politique,  Or Le front de pareto est rarement linéaire, le choix du budget n'est pas évident
 
 
@@ -505,8 +505,8 @@
         \begin{block}{}
             \begin{itemize}
                 \item \cmoins \textit{Untractable}.
-                \item \cplus add a DOF.
-                \item \cplus unfixed budget.
+                \item \cplus But add a DOF,
+                \item \cplus for any budget.
 
                 % A L ORAL On peut définir un budget de safety et d'afranchir des lambda.}
             \end{itemize}
